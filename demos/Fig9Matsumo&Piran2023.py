@@ -28,9 +28,9 @@ nup10 = 10**logNup/1e10
 
 theta = np.logspace(-0.6, 0.2, 9)
 
-equip_Newtonian = Equipartition(FpmJy, nup10, tdays, z, 0, newtonian = True)
-equip_onAxis = [Equipartition(FpmJy, nup10, tdays, z, thet, newtonian = False, onAxis = True) for thet in theta]
-equip_offAxis = [Equipartition(FpmJy, nup10, tdays, z, thet, newtonian = False, onAxis = False) for thet in theta]
+equip_Newtonian = Equipartition(FpmJy, nup10, tdays, z, 0, newtonian = True, corr = False)
+equip_onAxis = [Equipartition(FpmJy, nup10, tdays, z, thet, newtonian = False, onAxis = True, corr = False) for thet in theta]
+equip_offAxis = [Equipartition(FpmJy, nup10, tdays, z, thet, newtonian = False, onAxis = False, corr = False) for thet in theta]
 
 cmap = plt.cm.jet  # define the colormap
 # extract all colors from the .jet map

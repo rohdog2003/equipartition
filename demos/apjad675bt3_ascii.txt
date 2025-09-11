@@ -1,0 +1,13 @@
+Table 3 
+SED Parameters from the Synchrotron Emission Model
+
+
+deltat	nu _p	F _p	
+(days)	(GHz)	(mJy)	
+49	28.56 +or- 3.34	0.20 +or- 0.02	
+88	7.79 +or- 1.22	0.25 +or- 0.02	
+132	4.27 +or- 0.64	0.53 +or- 0.06	
+186	2.53 +or- 0.41	0.79 +or- 0.11	
+457	4.03 +or- 0.12	4.96 +or- 0.14	
+800	1.95 +or- 0.09	4.46 +or- 0.15	
+1377	1.06 +or- 0.05	5.78 +or- 0.20	
