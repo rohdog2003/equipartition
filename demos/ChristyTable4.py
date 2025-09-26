@@ -22,9 +22,11 @@ nup10_err = nupGHz_err/10
 z = 0.0262
 p = 2.8 # ?
 
-equip_newtonian    = Equipartition(FpmJy, nup10, tdays, z,    0, p = p, epse = 0.1, epsB =   0.2, fA = 1, fV = 0.36, newtonian = True)
+equip_newtonian    = Equipartition(FpmJy, nup10, tdays, z,    0, p = p, epse = 0.1, epsB =   0.2, fA = 1, fV = 0.36, newtonian = True, isoNewtonianNe = True)
 equip_offAxis_thin = Equipartition(FpmJy, nup10, tdays, z, 1.05, p = p, epse = 0.1, epsB = 0.003, fA = 1, fV =    1, onAxis = False)
 equip_offAxis_wide = Equipartition(FpmJy, nup10, tdays, z, 1.57, p = p, epse = 0.1, epsB = 0.005, fA = 1, fV =    1, onAxis = False)
+
+print("cosmology:", equip_newtonian.cosmo)
 
 s =     "newtonian\nt      log(R) log(E) log(B) log(Ne) log(next) beta\n"
 
