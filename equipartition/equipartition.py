@@ -9,6 +9,8 @@ import scipy.constants as scont
 import scipy
 import numpy as np
 import cosmoCalc
+from astropy.cosmology import default_cosmology
+import astropy.units as un
 
 class Equipartition:
     """Equipartition calculator based on Matsumoto and Piran 2023 (MP23) 
@@ -18,7 +20,9 @@ class Equipartition:
                  nuA10 = 1, fA = 1, fV = 1, fOmega = 1, p = 2, onAxis = True,\
                  newtonian = False, table = False, tol = 1e-15, maxiter = 500,\
                  epse = 0.1, epsB = 0.1 * 6/11, corr = True, BDfactor = False,\
-                 gammaM_newtonian = 2, hotprotons = True):
+                 gammaM_newtonian = 2, hotprotons = True, isoNewtonianNe = False,\
+                 cosmo = None):
+        """"""
         self.table = table
         self.tol = tol
         self.maxiter = maxiter
@@ -50,7 +54,13 @@ class Equipartition:
         self.onAxis = onAxis;
         self.newtonian = newtonian;
         # calculated values
-        self.dL = cosmoCalc.lumDistLCDM(z) * 100 # cm
+        # self.dL = cosmoCalc.lumDistLCDM(z) * 100 # cm
+        if cosmo is None:
+            self.cosmo = default_cosmology.get()
+        else:
+            self.cosmo = cosmo
+        
+        self.dL = (self.cosmo.luminosity_distance(self.z).to(un.cm)).value
         self.dL28 = self.dL/1e28
         self.epse = epse
         self.epsB = epsB
@@ -58,6 +68,7 @@ class Equipartition:
         self.corr = corr
         self.BDfactor = BDfactor
         self.gammaM_newtonian = gammaM_newtonian
+        self.isoNewtonianNe = isoNewtonianNe
         
         # constants
         self.c_cgs = scont.c * 100 # cm/s
@@ -101,11 +112,15 @@ class Equipartition:
                (self.nup10 * (1 + self.z)**3) *\
                self.gammaBulk()**2/(self.fA * self.R17**2 * self.deltaD())
     
+    def gammaa(self):
+        """absorption Cendes et al. 2021 (6)"""
+        return 525 * self.FpmJy * self.dL28**2 * self.nup10**(-2) * (1+self.z)**(-3) * self.fA**(-1) * self.R17**(-2)
+    
     def Ne(self): # FIXME much too small in the newtonian case 
         """MP23 (9)"""
         return (self.C()/3)**2 * 4.1e54 * (self.FpmJy**3 * self.dL28**6 * self.eta()**(10/3))/\
                (self.nup10**5 * (1 + self.z)**8) *\
-               self.gammaBulk()**4/(self.fA**2 * self.R17**4 * self.deltaD()**4)
+               self.gammaBulk()**4/(self.fA**2 * self.R17**4 * self.deltaD()**4) * (self.gammaa()/self.gammaM())**((self.p - 1) * self.isoNewtonianNe)
     
     def magField(self):
         """MP23 (10)"""
@@ -199,13 +214,13 @@ class Equipartition:
         """MP23 (37)"""
         pb = self.pbar()
         
-        return self.betaeqN()**(-(2 * pb + 13)/(3 * (pb + 6))) * self.eps()**(-1/(2 * pb + 13))
+        return self.betaeqN()**(-(2 * pb + 13)/(3 * (pb + 6)))
     
     def _thetactilde(self):
         """"""
         pb = self.pbar()
         
-        return self._betaeqNtilde()**(-(2 * pb + 13)/(3 * (pb + 6))) * self.eps()**(-1/(2 * pb + 13))
+        return self._betaeqNtilde()**(-(2 * pb + 13)/(3 * (pb + 6))) 
     
     def constraint_gammaBeta(u, t, tc):
         """MP23 (29) solved for zero and in terms of the four velocity"""
@@ -213,7 +228,7 @@ class Equipartition:
     
     def constraint_gammaBeta_corr(u, t, tctilde, pb):
         """"""
-        return (np.sqrt(1 + u**2) - u * np.cos(t)) * (1 - 1/(1 + u**2))**(-17/48) - tctilde * (np.sqrt(1 + u**2) - 1)**((pb - 2)/(3 * (pb + 6)))
+        return (np.sqrt(1 + u**2) - u * np.cos(t)) * (1 - 1/(1 + u**2))**(-(2*pb+13)/(6*(pb+6))) - tctilde * (np.sqrt(1 + u**2) - 1)**((pb - 2)/(3 * (pb + 6)))
     
     def solveMin(t, tc):
         """"""
