@@ -20,7 +20,8 @@ class Equipartition:
                  nuA10 = 1, fA = 1, fV = 1, fOmega = 1, p = 2, onAxis = True,\
                  newtonian = False, table = False, tol = 1e-15, maxiter = 500,\
                  epse = 0.1, epsB = 0.1 * 6/11, corr = True, BDfactor = False,\
-                 gammaM_newtonian = 2, hotprotons = True, isoNewtonianNe = False,\
+                 gammaM_newtonian = 2, hotprotons = True, numelectrons = True,\
+                 outofequipartition = True, isoNewtonianNe = False,\
                  cosmo = None):
         """"""
         self.table = table
@@ -69,6 +70,8 @@ class Equipartition:
         self.BDfactor = BDfactor
         self.gammaM_newtonian = gammaM_newtonian
         self.isoNewtonianNe = isoNewtonianNe
+        self.outofequipartition = outofequipartition
+        self.numelectrons = numelectrons
         
         # constants
         self.c_cgs = scont.c * 100 # cm/s
@@ -93,11 +96,17 @@ class Equipartition:
                    
     def pbar(self): # TODO defaults assume that absorption frequency is equal taken here to be greater but self.p is np.nan by default
         """"""
-        return np.where(self.nuA10 < self.nuM10, 2, self.p)
+        if self.numelectrons:
+            return np.where(self.nuA10 < self.nuM10, 2, self.p)
+        else:
+            return 2
     
     def eps(self):
         """"""
-        return 11/(2 * (self.pbar() + 1)) * self.epsB/self.epse
+        if self.outofequipartition:
+            return 11/(2 * (self.pbar() + 1)) * self.epsB/(self.xi * self.epse)
+        else:
+            return 1
     
     def deltaD(self):
         """MP23 (1)"""
