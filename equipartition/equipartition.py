@@ -65,7 +65,7 @@ class Equipartition:
         self.dL28 = self.dL/1e28
         self.epse = epse
         self.epsB = epsB
-        self.xi = (1 + 1/self.epse)**hotprotons # hot proton term
+        self.xi = ((1 - self.epsB)/self.epse)**hotprotons # hot proton term
         self.corr = corr
         self.BDfactor = BDfactor
         self.gammaM_newtonian = gammaM_newtonian
@@ -89,9 +89,7 @@ class Equipartition:
     
     def eta(self):
         """MP23 (7)"""
-        return self.newtonian * 1 +\
-               np.logical_not(self.newtonian) * ((self.nuM10 <= self.nuA10) * 1 +\
-                                                 np.logical_not((self.nuM10 <= self.nuA10)) * self.nuM10/self.nuA10)
+        return (self.nuM10 <= self.nuA10) * 1 + np.logical_not((self.nuM10 <= self.nuA10)) * self.nuM10/self.nuA10
     # forgot an equal sign on the <= and it was the worst bug ever to find
                    
     def pbar(self): # TODO defaults assume that absorption frequency is equal taken here to be greater but self.p is np.nan by default
@@ -125,7 +123,7 @@ class Equipartition:
         """absorption Cendes et al. 2021 (6)"""
         return 525 * self.FpmJy * self.dL28**2 * self.nup10**(-2) * (1+self.z)**(-3) * self.fA**(-1) * self.R17**(-2)
     
-    def Ne(self): # FIXME much too small in the newtonian case 
+    def Ne(self): # TODO am I missing an additional factor of 4 here? I'm guessing probably based on Cendes et al. 2021 (for the isotropic Newtonian case)
         """MP23 (9)"""
         return (self.C()/3)**2 * 4.1e54 * (self.FpmJy**3 * self.dL28**6 * self.eta()**(10/3))/\
                (self.nup10**5 * (1 + self.z)**8) *\
