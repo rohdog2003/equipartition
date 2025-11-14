@@ -22,7 +22,7 @@ class Equipartition:
                  epse = 0.1, epsB = 0.1 * 6/11, corr = True, BDfactor = False,\
                  gammaM_newtonian = 2, hotprotons = True, numelectrons = True,\
                  outofequipartition = True, isoNewtonianNe = False,\
-                 cosmo = None):
+                 cosmo = None, factorsFour = False):
         """"""
         self.table = table
         self.tol = tol
@@ -54,6 +54,7 @@ class Equipartition:
         self.p = p
         self.onAxis = onAxis;
         self.newtonian = newtonian;
+        self.factorsFour = factorsFour; # TODO factors of four only implemented for EeqN, ReqN, and Ne. Implement self consistently
         # calculated values
         # self.dL = cosmoCalc.lumDistLCDM(z) * 100 # cm
         if cosmo is None:
@@ -123,11 +124,11 @@ class Equipartition:
         """absorption Cendes et al. 2021 (6)"""
         return 525 * self.FpmJy * self.dL28**2 * self.nup10**(-2) * (1+self.z)**(-3) * self.fA**(-1) * self.R17**(-2)
     
-    def Ne(self): # TODO am I missing an additional factor of 4 here? I'm guessing probably based on Cendes et al. 2021 (for the isotropic Newtonian case)
+    def Ne(self): 
         """MP23 (9)"""
         return (self.C()/3)**2 * 4.1e54 * (self.FpmJy**3 * self.dL28**6 * self.eta()**(10/3))/\
                (self.nup10**5 * (1 + self.z)**8) *\
-               self.gammaBulk()**4/(self.fA**2 * self.R17**4 * self.deltaD()**4) * (self.gammaa()/self.gammaM())**((self.p - 1) * self.isoNewtonianNe)
+               self.gammaBulk()**4/(self.fA**2 * self.R17**4 * self.deltaD()**4) * 1/4**(self.newtonian * self.factorsFour) * (4 * (self.gammaa()/self.gammaM())**(self.p - 1))**self.isoNewtonianNe # additional factor from Cendes et al. 2021
     
     def magField(self):
         """MP23 (10)"""
@@ -172,14 +173,14 @@ class Equipartition:
         
         if self.corr == False:
             return (self.C()/3)**(7/17) * 1.9e17 * (self.FpmJy**(8/17) * self.dL28**(16/17) * self.eta()**(35/51))/\
-                   (self.nup10 * (1 + self.z)**(25/17)) * self.fA**(-7/17) * self.fV**(-1/17)
+                   (self.nup10 * (1 + self.z)**(25/17)) * self.fA**(-7/17) * self.fV**(-1/17) * 4**(self.newtonian * self.factorsFour/(2 * pb + 13))
         else:
             #return self.Fp**((pb + 6)/(2 * pb + 13)) * self.dL**(2 * (pb + 6)/(2 * pb + 13)) * (self.xi * self.eps() * self.gammaM()**(1 - pb) *\
             #       ((pb + 1) * self.C()**(pb + 5) * self.c_cgs * self.eta()**(5/3 * (pb + 5)))/\
             #       (2**(pb + 11) * 11 * np.sqrt(3) * np.pi**(pb + 7) * self.m_e_cgs**(pb + 6) * self.nup**(2 * pb + 13) * (1 + self.z)**(3 * pb + 19) * self.fA**(pb + 5) * self.fV))**(1/(2 * pb + 13))
     
             return (self.xi**(1/(2 * pb + 13)) * self.eps()**(1/(2 * pb + 13)) * self.gammaM()**((2 - pb)/(2 * pb + 13)) * (pb + 1)**(1/(2 * pb + 13)) * self.C()**((pb + 5)/(2 * pb + 13)) * self.c_cgs**(1/(2 * pb + 13)) * self.Fp**((pb + 6)/(2 * pb + 13)) * self.dL**(2 * (pb + 6)/(2 * pb + 13)) * self.eta()**(5/3 * (pb + 5)/(2 * pb + 13)))/\
-                   (2**((pb + 2)/(2 * pb + 13)) * 11**(1/(2 * pb + 13)) * np.sqrt(3)**(1/(2 * pb + 13)) * np.pi**((pb + 7)/(2 * pb + 13)) * self.m_e_cgs**((pb + 6)/(2 * pb + 13)) * self.nup * (1 + self.z)**((3 * pb + 19)/(2 * pb + 13)) * self.fA**((pb + 5)/(2 * pb + 13)) * self.fV**(1/(2 * pb + 13)))
+                   (2**((pb + 2)/(2 * pb + 13)) * 11**(1/(2 * pb + 13)) * np.sqrt(3)**(1/(2 * pb + 13)) * np.pi**((pb + 7)/(2 * pb + 13)) * self.m_e_cgs**((pb + 6)/(2 * pb + 13)) * self.nup * (1 + self.z)**((3 * pb + 19)/(2 * pb + 13)) * self.fA**((pb + 5)/(2 * pb + 13)) * self.fV**(1/(2 * pb + 13))) * 4**(self.newtonian * self.factorsFour/(2 * pb + 13))
     
     def _ReqNtilde(self):
         """"""
@@ -203,11 +204,11 @@ class Equipartition:
         
         if self.corr == False:
             return (self.C()/3)**(9/17) * 6.2e49 * (self.FpmJy**(20/17) * self.dL28**(40/17) * self.eta()**(15/17))/\
-                   (self.nup10 * (1 + self.z)**(37/17)) * self.fA**(-9/17) * self.fV**(6/17)
+                   (self.nup10 * (1 + self.z)**(37/17)) * self.fA**(-9/17) * self.fV**(6/17) * 4**(self.newtonian * self.factorsFour * 11/(2 * pb + 13))
         else:
             return (self.xi**(11/(2 * pb + 13)) * self.gammaM()**(11 * (2 - pb)/(2 * pb + 13)) * np.pi**((pb + 1)/(2 * pb + 13)) * 17 * self.C()**(3 * (pb + 1)/(2 * pb + 13)) * self.c_cgs**((4 * pb + 37)/(2 * pb + 13)) * self.m_e_cgs**((pb + 12)/(2 * pb + 13)) * self.Fp**((3 * pb + 14)/(2 * pb + 13)) * self.dL**(2 * (3 * pb + 14)/(2 * pb + 13)) * self.eta()**(5 * (pb + 1)/(2 * pb + 13)) * self.fV**(2 * (pb + 1)/(2 * pb + 13)))/\
                    (2**((7 * pb - 4)/(2 * pb + 13)) * (pb + 1)**(2 * (pb + 1)/(2 * pb + 13)) * 3**(5/(2 * pb + 13)) * 11**(11/(2 * pb + 13)) * np.sqrt(3)**(1/(2 * pb + 13)) * self.q_e_cgs**2 * self.nup * (1 + self.z)**((5 * pb + 27)/(2 * pb + 13)) * self.fA**(3 * (pb + 1)/(2 * pb + 13))) *\
-                   (11/17 * self.eps()**(-2 * (pb + 1)/(2 * pb + 13)) + 2 * (pb + 1)/17 * self.eps()**(11/(2 * pb + 13)))
+                   (11/17 * self.eps()**(-2 * (pb + 1)/(2 * pb + 13)) + 2 * (pb + 1)/17 * self.eps()**(11/(2 * pb + 13))) * 4**(self.newtonian * self.factorsFour * 11/(2 * pb + 13))
     
     def betaeqN(self):
         """MP23 (28)"""
