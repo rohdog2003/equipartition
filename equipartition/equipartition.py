@@ -19,7 +19,7 @@ class Equipartition:
     def __init__(self, FpmJy, nup10, tdays, z, theta, R17 = None, nuM10 = 1,\
                  nuA10 = 1, fA = 1, fV = 1, fOmega = 1, p = 2, onAxis = True,\
                  newtonian = False, table = False, tol = 1e-15, maxiter = 500,\
-                 epse = 0.1, epsB = 0.1 * 6/11, corr = True, BDfactor = False,\
+                 epse = 0.1, epsB = None, corr = True, BDfactor = False,\
                  gammaM_newtonian = 2, hotprotons = True, numelectrons = True,\
                  outofequipartition = True, isoNewtonianNe = False,\
                  cosmo = None, factorsFour = False):
@@ -62,17 +62,22 @@ class Equipartition:
         else:
             self.cosmo = cosmo
         
-        self.dL = (self.cosmo.luminosity_distance(self.z).to(un.cm)).value
-        self.dL28 = self.dL/1e28
-        self.epse = epse
-        self.epsB = epsB
-        self.xi = ((1 - self.epsB)/self.epse)**hotprotons # hot proton term
         self.corr = corr
         self.BDfactor = BDfactor
         self.gammaM_newtonian = gammaM_newtonian
         self.isoNewtonianNe = isoNewtonianNe
         self.outofequipartition = outofequipartition
         self.numelectrons = numelectrons
+        self.dL = (self.cosmo.luminosity_distance(self.z).to(un.cm)).value
+        self.dL28 = self.dL/1e28
+        self.epse = epse
+        if epsB is None and self.hotprotons:
+            self.epsB = 2 * (self.pbar() + 1)/(2 * self.pbar() + 13)
+        elif epsB is None: # in the case that hot protons are turned off
+            self.epsB = 2 * (self.pbar() + 1)/11 * self.epse 
+        else:
+            self.epsB = epsB
+        self.xi = ((1 - self.epsB)/self.epse)**hotprotons # hot proton term
         
         # constants
         self.c_cgs = scont.c * 100 # cm/s
@@ -93,7 +98,7 @@ class Equipartition:
         return (self.nuM10 <= self.nuA10) * 1 + np.logical_not((self.nuM10 <= self.nuA10)) * self.nuM10/self.nuA10
     # forgot an equal sign on the <= and it was the worst bug ever to find
                    
-    def pbar(self): # TODO defaults assume that absorption frequency is equal taken here to be greater but self.p is np.nan by default
+    def pbar(self):
         """"""
         if self.numelectrons:
             return np.where(self.nuA10 < self.nuM10, 2, self.p)
@@ -121,8 +126,13 @@ class Equipartition:
                self.gammaBulk()**2/(self.fA * self.R17**2 * self.deltaD())
     
     def gammaa(self):
-        """absorption Cendes et al. 2021 (6)"""
-        return 525 * self.FpmJy * self.dL28**2 * self.nup10**(-2) * (1+self.z)**(-3) * self.fA**(-1) * self.R17**(-2)
+        """Absorption Cendes et al. 2021 (6). Same as gammae for Newtonian case in optically thick regime"""
+        return (self.C()/3) * 5.2e2 * self.FpmJy * self.dL28**2 * self.nup10**(-2) * (1+self.z)**(-3) * self.fA**(-1) * self.R17**(-2)
+    
+    def num(self):
+        """nu_m estimated from calculated gamma_m"""
+        return  (self.deltaD() * self.q_e_cgs * self.magField() * self.gammaM()**2)/\
+                (2 * np.pi * self.m_e_cgs * self.c_cgs * (1 + self.z))
     
     def Ne(self): 
         """MP23 (9)"""
