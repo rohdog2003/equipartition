@@ -1,0 +1,49 @@
+[build-system]
+requires = ['setuptools>=64']
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "equipartition"
+authors = [{name = "Coleman Rhode", email = "rohdog2003@gmail.com"}]
+readme = "README.md"
+license = {file = "LICENSE"}
+dynamic = ["version"]
+
+requires-python = ">=3.8"
+
+classifiers = [
+  "License :: OSI Approved :: GNU GPL v3",
+  "Topic :: Scientific/Engineering",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+]
+
+dependencies = [
+"numpy",
+"scipy",
+"astropy",
+]
+
+[project.urls]
+Home = "https://github.com/rohdog2003/equipartition"
+
+[project.optional-dependencies]
+# tools for building the readthedocs page
+docs = [
+  "Sphinx>=3.0.0",
+  "myst-parser>=0.13",
+  "nbsphinx>=0.9.1",
+  "sphinx-book-theme>=0.0.33",
+  "sphinx_copybutton",
+  "autodoc",
+  "ipykernel",
+  "autodoc_pydantic"
+]
+
+[tool.setuptools.packages.find]
+where = ['.']
+
+[tool.setuptools.dynamic]
+version = {attr = 'equipartition._version.__version__'}
