@@ -8,7 +8,7 @@ Created on Mon Apr  7 09:00:20 2025
 import scipy.constants as scont
 import scipy
 import numpy as np
-import cosmoCalc
+from . import cosmoCalc
 from astropy.cosmology import default_cosmology
 import astropy.units as un
 
