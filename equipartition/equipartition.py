@@ -8,13 +8,54 @@ Created on Mon Apr  7 09:00:20 2025
 import scipy.constants as scont
 import scipy
 import numpy as np
-from . import cosmoCalc
-from astropy.cosmology import default_cosmology
+from astropy.cosmology import Planck18 as COSMO
 import astropy.units as un
 
 class Equipartition:
     """Equipartition calculator based on Matsumoto and Piran 2023 (MP23) 
     prescription (https://doi.org/10.1093/mnras/stad1269). cgs + Gauss units
+
+    Args:
+        FpmJy (np.ndarray[float]): The peak flux in mJy
+        nup10 (np.ndarray[float]): The peak frequency in units of 10^10 Hz
+        tdays (np.ndarray[float]): The time, in days, since the outflow launch
+        z (float): The redshift to the source you are modeling
+        theta (float): The observers viewing angle. An on-axis jet or spherical
+                       outflow should have theta=0.
+        R17 (np.ndarray[float]): The outflow radius in units of 10^17 cm. Default
+                                 is None, and this will be computed from the
+                                 equipartition radius.
+        nuM10 (float): The frequency corresponding to the minimum
+                                   electron energy, in units of 10^10 Hz. Default is 1.
+        nuA10 (float): The self-absorption frequency, in units of 10^10 Hz. Default is 1.
+        fA (float): The area filling factor. 1 (the default) for spherical.
+        fV (float): The volume filling factor. 0.36 for spherical, default is 1.
+        fOmega (float): COLEMAN TO DO
+        p (float): The electron power law index. Default is 2 (typical for GRBs)
+        onAxis (bool): True for an on-axis relativistic jet solution. Default is True.
+        newtonian (bool): True for a newtonian outflow. Default is False.
+        table (bool): COLEMAN TO DO
+        tol (float): COLEMAN TO DO
+        maxiter (int): COLEMAN TO DO
+        epse (float): the epislon_e parameter from MP23
+        epsB (float): the epislon_B parameter from MP23
+        corr (bool): Set to True to add additional corrections derived in this work.
+                      Default is True. False will reproduce MP23.
+        BDfactor (bool): COLEMAN TO DO
+        gammaM_newtonian (float): The minimum gamma_m to default to in the newtonian
+                                  case. Default is 2 (the typical value).
+        hotprotons (bool): Set to True to enable hot proton corrections. Default is True.
+        numelectrons (bool): COLEMAN TO DO
+        outofequipartition (bool): Set to True to do out of equipartition corrections.
+                                   Default is True.
+        isoNewtonianNe (bool): COLEMAN TO DO
+        cosmo (astropy.cosomology.Cosmology): The astropy cosmology to use. Default
+                                              is {COSMO}.
+        factorsFour (bool): Set to True to add additional factors of four from Cendes+21.
+
+    Returns:
+        An Equipartition object to compute various properties in equipartition.            
+
     """
     def __init__(self, FpmJy, nup10, tdays, z, theta, R17 = None, nuM10 = 1,\
                  nuA10 = 1, fA = 1, fV = 1, fOmega = 1, p = 2, onAxis = True,\
@@ -22,8 +63,8 @@ class Equipartition:
                  epse = 0.1, epsB = None, corr = True, BDfactor = False,\
                  gammaM_newtonian = 2, hotprotons = True, numelectrons = True,\
                  outofequipartition = True, isoNewtonianNe = False,\
-                 cosmo = None, factorsFour = False):
-        """"""
+                 cosmo = COSMO, factorsFour = False):
+
         self.table = table
         self.tol = tol
         self.maxiter = maxiter
@@ -56,11 +97,7 @@ class Equipartition:
         self.newtonian = newtonian;
         self.factorsFour = factorsFour; # TODO factors of four only implemented for EeqN, ReqN, and Ne. Implement self consistently
         # calculated values
-        # self.dL = cosmoCalc.lumDistLCDM(z) * 100 # cm
-        if cosmo is None:
-            self.cosmo = default_cosmology.get()
-        else:
-            self.cosmo = cosmo
+        self.cosmo = cosmo
         
         self.corr = corr
         self.BDfactor = BDfactor
