@@ -105,6 +105,7 @@ class Equipartition:
         self.isoNewtonianNe = isoNewtonianNe
         self.outofequipartition = outofequipartition
         self.numelectrons = numelectrons
+        self.hotprotons = hotprotons
         self.dL = (self.cosmo.luminosity_distance(self.z).to(un.cm)).value
         self.dL28 = self.dL/1e28
         self.epse = epse
