@@ -209,9 +209,9 @@ class Equipartition:
     def energye(self): 
         """MP23 (14)"""
         if self.corr == False:
-            return self.m_e_cgs * self.c_cgs**2 * self.gammae() * self.gammaBulk() * self.Ne()
+            return self.m_e_cgs * self.c_cgs**2 * self.gammae() * self.gammaBulk()
         else:
-            return (self.gammaM() / self.gammae())**(2 - self.pbar()) * self.m_e_cgs * self.c_cgs**2 * self.gammae() * self.gammaBulk() * self.Ne()
+            return (self.gammaM() / self.gammae())**(2 - self.pbar()) * self.m_e_cgs * self.c_cgs**2 * self.gammae() * self.gammaBulk() * self.Ne()/self.kappa()**(self.p - 1)
         
     def energyB(self):
         """MP23 (15)"""
