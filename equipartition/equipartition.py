@@ -10,6 +10,8 @@ import scipy
 import numpy as np
 from astropy.cosmology import Planck18 as COSMO
 import astropy.units as un
+import warnings
+
 
 class Equipartition:
     """Equipartition calculator based on Matsumoto and Piran 2023 (MP23) 
@@ -30,28 +32,28 @@ class Equipartition:
         nuA10 (float): The self-absorption frequency, in units of 10^10 Hz. Default is 1.
         fA (float): The area filling factor. 1 (the default) for spherical.
         fV (float): The volume filling factor. 0.36 for spherical, default is 1.
-        fOmega (float): COLEMAN TO DO
+        fOmega (float): The solid angle filling factor. 4 for spherical, default is 1.
         p (float): The electron power law index. Default is 2 (typical for GRBs)
         onAxis (bool): True for an on-axis relativistic jet solution. Default is True.
         newtonian (bool): True for a newtonian outflow. Default is False.
-        table (bool): COLEMAN TO DO
-        tol (float): COLEMAN TO DO
-        maxiter (int): COLEMAN TO DO
+        table (bool): If True then uses a table to approximate the bulk LF. Valid only when corr = False. Default is False.
+        tol (float): The floating point precision for which the bulk LF is solved for.
+        maxiter (int): The max number of iterations in solving for bulk LF
         epse (float): the epislon_e parameter from MP23
         epsB (float): the epislon_B parameter from MP23
         corr (bool): Set to True to add additional corrections derived in this work.
                       Default is True. False will reproduce MP23.
-        BDfactor (bool): COLEMAN TO DO
+        BDfactor (bool): Modifies the factor that matches the synhcrotron and Rayleigh Jeans peak flux C. If True then sets C=3 as in Barniol Duran 2013. If False use full expression to calculate p-dependent C. Default is False
         gammaM_newtonian (float): The minimum gamma_m to default to in the newtonian
                                   case. Default is 2 (the typical value).
         hotprotons (bool): Set to True to enable hot proton corrections. Default is True.
-        numelectrons (bool): COLEMAN TO DO
+        numelectrons (bool): Set to True to enable electrons radiating at nu_m corrections. Default is True.
         outofequipartition (bool): Set to True to do out of equipartition corrections.
                                    Default is True.
-        isoNewtonianNe (bool): COLEMAN TO DO
+        isoNewtonianNe (bool): Set to true to add additional factor of four to electron number as in Cendes+2021. Default is False.
         cosmo (astropy.cosomology.Cosmology): The astropy cosmology to use. Default
                                               is {COSMO}.
-        factorsFour (bool): Set to True to add additional factors of four from Cendes+21.
+        factorsFour (bool): Set to True to add additional factors of four from Cendes+21 and Barniol Duran 2013.
 
     Returns:
         An Equipartition object to compute various properties in equipartition.            
@@ -135,7 +137,21 @@ class Equipartition:
         """MP23 (7)"""
         return (self.nuM10 <= self.nuA10) * 1 + np.logical_not((self.nuM10 <= self.nuA10)) * self.nuM10/self.nuA10
     # forgot an equal sign on the <= and it was the worst bug ever to find
-                   
+             
+    def kappa(self):
+        """Extension to optically thick spectra. Electrons radiating at nu_m correction."""
+        optically_thin = self.nuM10 > self.nuA10
+        optically_thick = np.logical_not(optically_thin)
+        
+        rat = self.gammae()/self.gammaM()
+        
+        if np.any(rat < 1):
+            warnings.warn("estimated gammae (at peak) is smaller than estimated gammaM for optically tick. Setting kappa = 1 in this case")
+            
+        rat = np.maximum(rat, 1)
+        
+        return self.numelectrons * (optically_thin * 1 + optically_thick * rat) + np.logical_not(self.numelectrons) * 1
+        
     def pbar(self):
         """"""
         if self.numelectrons:
@@ -160,7 +176,7 @@ class Equipartition:
     def gammae(self):
         """MP23 (8)"""
         return (self.C()/3) * 5.2e2 * (self.FpmJy * self.dL28**2 * self.eta()**(5/3))/\
-               (self.nup10 * (1 + self.z)**3) *\
+               (self.nup10**2 * (1 + self.z)**3) *\
                self.gammaBulk()**2/(self.fA * self.R17**2 * self.deltaD())
     
     def gammaa(self):
@@ -172,12 +188,14 @@ class Equipartition:
         return  (self.deltaD() * self.q_e_cgs * self.magField() * self.gammaM()**2)/\
                 (2 * np.pi * self.m_e_cgs * self.c_cgs * (1 + self.z))
     
-    def Ne(self): 
+    def Ne(self):
         """MP23 (9)"""
+        extension = self.kappa()**(self.p - 1)
+        
         return (self.C()/3)**2 * 4.1e54 * (self.FpmJy**3 * self.dL28**6 * self.eta()**(10/3))/\
                (self.nup10**5 * (1 + self.z)**8) *\
-               self.gammaBulk()**4/(self.fA**2 * self.R17**4 * self.deltaD()**4) * 1/4**(self.newtonian * self.factorsFour) * (4 * (self.gammaa()/self.gammaM())**(self.p - 1))**self.isoNewtonianNe # additional factor from Cendes et al. 2021
-    
+               self.gammaBulk()**4/(self.fA**2 * self.R17**4 * self.deltaD()**4) * 1/4**(self.newtonian * self.factorsFour) * 4**self.isoNewtonianNe * extension # additional factor four from Cendes et al. 2021
+               # TODO does cendes et al. factor of four turn off Barniol Duran factors of four?
     def magField(self):
         """MP23 (10)"""
         return (3/self.C())**2 * 1.3e-2 * (self.nup10**5 * (1 + self.z)**7)/\
@@ -398,7 +416,10 @@ class Equipartition:
         if self.newtonian:
             return self.gammaM_newtonian
         
-        return self.chie() * (self.gammaBulk() - 1)
+        gM = self.chie() * (self.gammaBulk() - 1)
+        gM = np.maximum(gM, 2)
+        
+        return gM
     
     def C(self):
         """Shen and Zhang (A15) (https://doi.org/10.1111/j.1365-2966.2009.15212.x).
