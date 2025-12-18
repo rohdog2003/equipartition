@@ -56,7 +56,8 @@ class Equipartition:
         factorsFour (bool): Set to True to add additional factors of four from Cendes+21 and Barniol Duran 2013.
 
     Returns:
-        An Equipartition object to compute various properties in equipartition.            
+        An Equipartition object to compute various properties in equipartition.   
+        energysum (bool): Set to True to assume eps_p + eps_e + eps_B = 1. Default is False.        
 
     """
     def __init__(self, FpmJy, nup10, tdays, z, theta, R17 = None, nuM10 = 1,\
@@ -65,7 +66,7 @@ class Equipartition:
                  epse = 0.1, epsB = None, corr = True, BDfactor = False,\
                  gammaM_newtonian = 2, hotprotons = True, numelectrons = True,\
                  outofequipartition = True, isoNewtonianNe = False,\
-                 cosmo = COSMO, factorsFour = False):
+                 cosmo = COSMO, factorsFour = False, energysum = False):
 
         self.table = table
         self.tol = tol
@@ -98,6 +99,7 @@ class Equipartition:
         self.onAxis = onAxis;
         self.newtonian = newtonian;
         self.factorsFour = factorsFour; # TODO factors of four only implemented for EeqN, ReqN, and Ne. Implement self consistently
+        self.energysum = energysum
         # calculated values
         self.cosmo = cosmo
         
@@ -111,13 +113,20 @@ class Equipartition:
         self.dL = (self.cosmo.luminosity_distance(self.z).to(un.cm)).value
         self.dL28 = self.dL/1e28
         self.epse = epse
-        if epsB is None and self.hotprotons:
+        
+        if epsB is None and self.hotprotons and self.energysum:
             self.epsB = 2 * (self.pbar() + 1)/(2 * self.pbar() + 13)
+        elif epsB is None and self.hotprotons:
+            self.epsB = 2 * (self.pbar() + 1)/11 * (self.epse + 1)
         elif epsB is None: # in the case that hot protons are turned off
             self.epsB = 2 * (self.pbar() + 1)/11 * self.epse 
         else:
             self.epsB = epsB
-        self.xi = ((1 - self.epsB)/self.epse)**hotprotons # hot proton term
+            
+        if self.energysum:
+            self.xi = ((1 - self.epsB)/self.epse)**hotprotons
+        else:
+            self.xi = (1.+1./self.epse)**hotprotons # Barniol Duran et al. 2013
         
         # constants
         self.c_cgs = scont.c * 100 # cm/s
