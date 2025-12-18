@@ -44,7 +44,7 @@ class Equipartition:
         corr (bool): Set to True to add additional corrections derived in this work.
                       Default is True. False will reproduce MP23.
         BDfactor (bool): Modifies the factor that matches the synhcrotron and Rayleigh Jeans peak flux C. If True then sets C=3 as in Barniol Duran 2013. If False use full expression to calculate p-dependent C. Default is False
-        gammaM_newtonian (float): The minimum gamma_m to default to in the newtonian
+        gammaM_newtonian (float): (deprecated) The minimum gamma_m to default to in the newtonian
                                   case. Default is 2 (the typical value).
         hotprotons (bool): Set to True to enable hot proton corrections. Default is True.
         numelectrons (bool): Set to True to enable electrons radiating at nu_m corrections. Default is True.
@@ -420,10 +420,20 @@ class Equipartition:
         """"""
         return (self.p - 2)/(self.p - 1) * self.epse * self.m_p_cgs/self.m_e_cgs
     
-    def gammaM(self): 
+    def gammaM(self, debug = False): 
         """"""
+        pb = self.pbar()
+        
         if self.newtonian:
-            return self.gammaM_newtonian
+            gammaM_newtonian = (9/32 * self.chie() * ((1 + self.z)/(self.c_cgs * self.tsec))**2)**((2 * pb + 13)/(4 * pb + 9)) *\
+                               (self.xi**(2/(4 * pb + 9)) * self.eps()**(2/(4 * pb + 9)) * (pb + 1)**(2/(4 * pb + 9)) * self.C()**(2 * (pb + 5)/(4 * pb + 9)) * self.c_cgs**(2/(4 * pb + 9)) * self.Fp**(2 * (pb + 6)/(4 * pb + 9)) * self.dL**(4 * (pb + 6)/(4 * pb + 9)) * self.eta()**(10/3 * (pb + 5)/(4 * pb + 9))) /\
+                               (2**(2 * (pb + 2)/(4 * pb + 9)) * 11**(2/(4 * pb + 9)) * np.sqrt(3)**(2/(4 * pb + 9)) * np.pi**(2 * (pb + 7)/(4 * pb + 9)) * self.m_e_cgs**(2 * (pb + 6)/(4 * pb + 9)) * self.nup**(2 * (2 * pb + 13)/(4 * pb + 9)) * (1 + self.z)**(2 * (3 * pb + 19)/(4 * pb + 9)) * self.fA**(2 * (pb + 5)/(4 * pb + 9)) * self.fV**(2/(4 * pb + 9)))# TODO check correctness, BD13 factors of 4
+            
+            if debug:
+                return gammaM_newtonian    
+            else:
+                return np.maximum(gammaM_newtonian, 2) # assumes all hydrogen
+            #return self.gammaM_newtonian
         
         gM = self.chie() * (self.gammaBulk() - 1)
         gM = np.maximum(gM, 2)
