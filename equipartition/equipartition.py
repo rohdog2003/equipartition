@@ -139,9 +139,9 @@ class Equipartition:
             self.epsB = epsB # user can still set epsB
             
         if self.energysum:
-            self.xi = ((1 - self.epsB)/self.epse)**hotprotons
+            self.xi = ((1 - self.epsB)/self.epse)**self.hotprotons
         else:
-            self.xi = (1.+1./self.epse)**hotprotons # Barniol Duran et al. 2013
+            self.xi = (1.+1./self.epse)**self.hotprotons # Barniol Duran et al. 2013
         
         # constants
         self.c_cgs = scont.c * 100 # cm/s
@@ -498,10 +498,10 @@ class Equipartition:
                                    (3**(2 * (2 * pb + 13)/(4 * pb + 9)) * (pb + 1)**(2/(4 * pb + 9)) * self.C()**(2 * (pb + 5)/(4 * pb + 9)) * self.Fp**(2 * (pb + 6)/(4 * pb + 9)) * self.dL**(4 * (pb + 6)/(4 * pb + 9)) * self.eta()**(10/3 * (pb + 5)/(4 * pb + 9)))/\
                                    (2**(3 * (4 * pb + 23)/(4 * pb + 9)) * 11**(2/(4 * pb + 9)) * np.sqrt(3)**(2/(4 * pb + 9)) * np.pi**(2 * (pb + 7)/(4 * pb + 9)) * self.m_e_cgs**(2 * (pb + 6)/(4 * pb + 9)) * self.nup**(2 * (2 * pb + 13)/(4 * pb + 9)) * (1 + self.z)**(2 * (pb + 6)/(4 * pb + 9)) * self.fA**(2 * (pb + 5)/(4 * pb + 9)) * self.fV**(2/(4 * pb + 9)) * self.c_cgs**(2 * (2 * pb + 12)/(4 * pb + 9)) * self.tsec**(2 * (2 * pb + 13)/(4 * pb + 9)))
             
-            else: 
-                gammaM_newtonian = self.xi**(2/17) * self.eps()**(2/17) * self.mu * self.chie() * (self.nuM10/self.nuA10)**((2 - pb)/2) *\
+            else: # TODO check this
+                gammaM_newtonian = self.xi**(2/17) * self.eps()**(2/17) * self.mu * self.chie() * (self.nuM10/self.nuA10)**((2 - pb)/17) *\
                                    (3**(36/17) * self.C()**(14/17) * self.Fp**(16/17) * self.dL**(32/17) * self.eta()**(70/51))/\
-                                   (2**(93/17) * 11**(2/17) * np.sqrt(3)**(2/17) * np.pi**(9/17) * self.m_e_cgs**(8/17) * self.nup**2 * (1 + self.z)**(16/17) * self.fA**(14/17) * self.fV**(2/17) * self.c_cgs**(32/17) * self.tsec**(34/17))
+                                   (2**(93/17) * 11**(2/17) * np.sqrt(3)**(2/17) * np.pi**(18/17) * self.m_e_cgs**(16/17) * self.nup**2 * (1 + self.z)**(16/17) * self.fA**(14/17) * self.fV**(2/17) * self.c_cgs**(32/17) * self.tsec**(34/17))
             
             if debug:
                 return gammaM_newtonian    
