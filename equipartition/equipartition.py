@@ -57,7 +57,9 @@ class Equipartition:
         energysum (bool): Set to True to assume eps_o + eps_e + eps_B = 1. Default is False.
         mu (float): the ratio of protons to electrons in the circumnuclear medium. Default is 1. Typical for ISM ~0.61.
         bothfreq (bool): Set to True to when both nuM10 and nuA10 can be both identified in the spectrum so that gamma_m does not need to be estimated. Default is False.
-
+        smallDist (float): if the object is very close and z is nearly zero then the distance (in cm) to the object is the luminosity distance. 
+                           Default None so that luminosity distance is estimated from redshift z by default. When this variable is not None then the value of z given is set to zero.
+        
     Returns:
         An Equipartition object to compute various properties in equipartition.   
                 
@@ -69,7 +71,9 @@ class Equipartition:
                  epse = 0.1, epsB = None, corr = True, BDfactor = False,\
                  gammaM_newtonian = 2, hotprotons = True, numelectrons = True,\
                  outofequipartition = True, isoNewtonianNe = False,\
-                 cosmo = COSMO, factorsFour = False, energysum = False, mu = 1, bothfreq = False):
+                 cosmo = COSMO, factorsFour = False, energysum = False, mu = 1,\
+                 bothfreq = False,\
+                 smallDist = None):
 
         self.table = table
         self.tol = tol
@@ -107,6 +111,7 @@ class Equipartition:
         self.bothfreq = bothfreq
         # calculated values
         self.cosmo = cosmo
+        self.smallDist = smallDist
         
         self.corr = corr
         self.BDfactor = BDfactor
@@ -115,7 +120,13 @@ class Equipartition:
         self.outofequipartition = outofequipartition
         self.numelectrons = numelectrons
         self.hotprotons = hotprotons
-        self.dL = (self.cosmo.luminosity_distance(self.z).to(un.cm)).value
+        
+        if self.smallDist is None:
+            self.dL = (self.cosmo.luminosity_distance(self.z).to(un.cm)).value
+        else:
+            self.dL = self.smallDist
+            self.z = 0
+            
         self.dL28 = self.dL/1e28
         self.epse = epse
         
@@ -148,6 +159,7 @@ class Equipartition:
         self.m_e_cgs = scont.m_e * 1000 # g
         self.q_e_cgs = 4.80320425e-10 # statcoulombs
         self.m_p_cgs = scont.m_p * 1000 # g
+        self.sigmat = 6.65245870e-25
         self.gamBet = self.gammaBeta() # calculate gammaBeta as object is created to reduce runtime
     
         if R17 is None: # handling default radius as equipartition radius
@@ -203,6 +215,19 @@ class Equipartition:
     
         return self.newtonian * 1 +\
                np.logical_not(self.newtonian) * 1/(self.gammaBulk() * (1 - beta * np.cos(self.theta)))
+    
+    def gammac(self):
+        """"""
+        tprime = self.gammaBulk() * self.tsec/(1 + self.z)
+        return 6 * np.pi * self.m_e_cgs * self.c_cgs/(self.sigmat * self.magField()**2 * tprime)
+    
+    def nusyn(self, gamma):
+        """"""
+        return self.deltaD() * gamma**2 * self.q_e_cgs * self.magField()/(2 * np.pi * self.m_e_cgs * self.c_cgs * (1 + self.z))
+    
+    def nuc(self):
+        """"""
+        return self.nusyn(self.gammac())
     
     def gammae(self):
         """MP23 (8)"""
