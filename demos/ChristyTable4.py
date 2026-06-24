@@ -110,6 +110,7 @@ def percentdiffsubplot(subplotnum, title, xlabel, ylabel, t,\
     if flipy:
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position("right")
+        ax.yaxis.labelpad = 20
     
     if ylog:
         plt.yscale("log")
@@ -118,7 +119,7 @@ def percentdiffsubplot(subplotnum, title, xlabel, ylabel, t,\
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     
-    plt.axhline(1, linestyle = "-.", color = "k")
+    plt.axhline(1, linestyle = "-", color = "gray")
     pdiffa, pdiffaerr = percentdifference(tseries1a, tseries1aerr, tseries2a, tseries2aerr)
     if plota:
         plt.errorbar(t, pdiffa, yerr = pdiffaerr, marker = "s", alpha = alpha, linestyle = ":", mfc = "None", color = colors[0])
@@ -130,7 +131,6 @@ def percentdiffsubplot(subplotnum, title, xlabel, ylabel, t,\
         plt.errorbar(t * shiftfactor**2, pdiffc, yerr = pdiffcerr, marker = "o", alpha = alpha, linestyle = "-", mfc = "None", color = colors[2])
     
     if legend:
-        plt.axhline(1, linestyle = "-.", color = "k")
         pdiffa, pdiffaerr = percentdifference(tseries1a, tseries1aerr, tseries2a, tseries2aerr)
         if plota:
             plt.errorbar(t, pdiffa, yerr = pdiffaerr, marker = "s", alpha = alpha, linestyle = ":", mfc = "None", color = colors[0], label = labels[0])
@@ -148,7 +148,7 @@ def percentdiffsubplot(subplotnum, title, xlabel, ylabel, t,\
     if bottom is not None:
         plt.ylim(bottom = bottom)
 
-t, nupGHz, _, nupGHz_err, FpmJy, _, FpmJy_err = np.loadtxt("apjad675bt3_ascii.txt", dtype = str, skiprows = 6).T
+t, nupGHz, _, nupGHz_err, FpmJy, _, FpmJy_err = np.loadtxt("demos/apjad675bt3_ascii.txt", dtype = str, skiprows = 6).T
 
 t = np.float64(t); print("day:", t)
 nupGHz = np.float64(nupGHz); print("peak freq (GHz):", nupGHz)
@@ -163,14 +163,20 @@ nup10_err = nupGHz_err/10
 z = 0.0262
 p = 2.8 # ?
 
-N = 1000 # TODO
+N = 1000 # TODO change to large number
 
-equip_newtonian    = [Equipartition(np.random.normal(FpmJy[i], FpmJy_err[i], N), np.random.normal(nup10[i], nup10_err[i], N), tdays[i], z,    0, p = p, epse = 0.1, epsB =   0.2, fA = 1, fV = 0.36, newtonian = True, isoNewtonianNe = True, factorsFour = True) for i in range(len(t))]
+equip_newtonian    = [Equipartition(np.random.normal(FpmJy[i], FpmJy_err[i], N), np.random.normal(nup10[i], nup10_err[i], N), tdays[i], z,    0, p = p, epse = 0.1, epsB =   0.2, fA = 1, fV = 0.36, fOmega = 4, newtonian = True, isoNewtonianNe = False, factorsFour = False) for i in range(len(t))]
 equip_offAxis_thin = [Equipartition(np.random.normal(FpmJy[i], FpmJy_err[i], N), np.random.normal(nup10[i], nup10_err[i], N), tdays[i], z, 1.05, p = p, epse = 0.1, epsB = 0.003, fA = 1, fV =    1, onAxis = False) for i in range(len(t))]
 equip_offAxis_wide = [Equipartition(np.random.normal(FpmJy[i], FpmJy_err[i], N), np.random.normal(nup10[i], nup10_err[i], N), tdays[i], z, 1.57, p = p, epse = 0.1, epsB = 0.005, fA = 1, fV =    1, onAxis = False) for i in range(len(t))]
 
 print("cosmology:", equip_newtonian[0].cosmo)
 print("C:", equip_newtonian[0].C())
+print("gammae Newtonian:", [np.mean(equip.gammae()) for equip in equip_newtonian])
+print("gammaM Newtonian:", [np.mean(equip.gammaM()) for equip in equip_newtonian])
+print("gammae offAxis theta=1.05:", [np.mean(equip.gammae()) for equip in equip_offAxis_thin])
+print("gammaM offAxis theta=1.05:", [np.mean(equip.gammaM()) for equip in equip_offAxis_thin])
+print("gammae offAxis theta=1.57:", [np.mean(equip.gammae()) for equip in equip_offAxis_wide])
+print("gammaM offAxis theta=1.57:", [np.mean(equip.gammaM()) for equip in equip_offAxis_wide])
 
 s =     "newtonian\nt      log(R)       log(E)       log(B)      log(Ne)      log(next)      beta\n"
 
@@ -224,7 +230,7 @@ logEgeom1, logEgeom1merr, logEgeom1perr, _,\
 logBgeom1, logBgeom1merr, logBgeom1perr,\
 logNgeom1, logNgeom1merr, logNgeom1perr,\
 logngeom1, logngeom1merr, logngeom1perr,\
-betageom1, betageom1merr, betageom1perr = np.loadtxt("apjad675bt4_ChatGPTprocessed_geom1.txt", dtype = str).T
+betageom1, betageom1merr, betageom1perr = np.loadtxt("demos/apjad675bt4_ChatGPTprocessed_geom1.txt", dtype = str).T
 
 logRgeom1    = np.float64(logRgeom1)
 logRgeom1err = np.maximum(np.abs(np.float64(logRgeom1merr)), np.float64(logRgeom1perr))
@@ -245,7 +251,7 @@ logEgeom2, logEgeom2merr, logEgeom2perr, _, _, _,\
 logBgeom2, logBgeom2merr, logBgeom2perr,\
 logNgeom2, logNgeom2merr, logNgeom2perr,\
 logngeom2, logngeom2merr, logngeom2perr,\
-Gammgeom2, Gammgeom2merr, Gammgeom2perr = np.loadtxt("apjad675bt4_ChatGPTprocessed_geom2.txt", dtype = str).T
+Gammgeom2, Gammgeom2merr, Gammgeom2perr = np.loadtxt("demos/apjad675bt4_ChatGPTprocessed_geom2.txt", dtype = str).T
 
 logRgeom2    = np.float64(logRgeom2)
 logRgeom2err = np.maximum(np.abs(np.float64(logRgeom2merr)), np.float64(logRgeom2perr))
@@ -266,7 +272,7 @@ logEgeom3, logEgeom3merr, logEgeom3perr, _, _, _,\
 logBgeom3, logBgeom3merr, logBgeom3perr,\
 logNgeom3, logNgeom3merr, logNgeom3perr,\
 logngeom3, logngeom3merr, logngeom3perr,\
-Gammgeom3, Gammgeom3merr, Gammgeom3perr = np.loadtxt("apjad675bt4_ChatGPTprocessed_geom3.txt", dtype = str).T
+Gammgeom3, Gammgeom3merr, Gammgeom3perr = np.loadtxt("demos/apjad675bt4_ChatGPTprocessed_geom3.txt", dtype = str).T
 
 logRgeom3    = np.float64(logRgeom3)
 logRgeom3err = np.maximum(np.abs(np.float64(logRgeom3merr)), np.float64(logRgeom3perr))
@@ -392,7 +398,7 @@ def plotfigure():
     inner_ax1.yaxis.tick_right()
     inner_ax1.yaxis.set_label_position("right")
     inner_ax1.errorbar(tdays, pdiffa, yerr=pdiffaerr, marker="s", alpha=alpha, linestyle=":", mfc="None", color=colors[0])
-    inner_ax1.axhline(1, linestyle="-.", color="k")
+    inner_ax1.axhline(1, linestyle="-", color="gray")
     inner_ax1.set_ylabel(r"$\beta_{ours}/\beta_{C24}$")
     inner_ax1.set_xscale("log")
     
@@ -400,18 +406,19 @@ def plotfigure():
     inner_ax2.yaxis.set_label_position("right")
     inner_ax2.errorbar(tdays*shiftfactor, pdiffb, yerr=pdiffberr, marker="d", alpha=alpha, linestyle="--", mfc="None", color=colors[1])
     inner_ax2.errorbar(tdays*shiftfactor**2, pdiffc, yerr=pdiffcerr, marker="o", alpha=alpha, linestyle="-", mfc="None", color=colors[2])
-    inner_ax2.axhline(1, linestyle="-.", color="k")
+    inner_ax2.axhline(1, linestyle="-", color="gray")
     inner_ax2.set_ylabel(r"$\Gamma_{ours}/\Gamma_{C24}$")
     inner_ax2.set_xlabel(r"Time $t$ [days]")
     inner_ax2.set_xscale("log")
+    #inner_ax2.labelpad = 15
 
     # Align x-limits with left-hand subplots
     inner_ax1.set_xlim(all_axes[0].get_xlim())
     inner_ax2.set_xlim(all_axes[4].get_xlim())
 
     # Force figure layout to remove extra padding
-    plt.subplots_adjust(left=0.12, right=0.98, top=0.97, bottom=0.08, hspace=0, wspace=0)
-
+    plt.subplots_adjust(left=0.12, right=0.98, top=0.965, bottom=0.065, hspace=0, wspace=0)
+    
     plt.savefig("percentdiff.png", dpi=750)
     plt.savefig("percentdiff.svg")
     plt.show()
