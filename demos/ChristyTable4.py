@@ -117,9 +117,10 @@ def percentdiffsubplot(subplotnum, title, xlabel, ylabel, t,\
     
     plt.xscale("log")
     plt.xlabel(xlabel)
+    plt.xlim(40, 2000)
     plt.ylabel(ylabel)
     
-    plt.axhline(1, linestyle = "-", color = "gray")
+    plt.axhline(1, linestyle = "--", color = "gray")
     pdiffa, pdiffaerr = percentdifference(tseries1a, tseries1aerr, tseries2a, tseries2aerr)
     if plota:
         plt.errorbar(t, pdiffa, yerr = pdiffaerr, marker = "s", alpha = alpha, linestyle = ":", mfc = "None", color = colors[0])
@@ -129,6 +130,12 @@ def percentdiffsubplot(subplotnum, title, xlabel, ylabel, t,\
     pdiffc, pdiffcerr = percentdifference(tseries1c, tseries1cerr, tseries2c, tseries2cerr)
     if plotc:
         plt.errorbar(t * shiftfactor**2, pdiffc, yerr = pdiffcerr, marker = "o", alpha = alpha, linestyle = "-", mfc = "None", color = colors[2])
+    
+    print("Newtonian mean  {}".format(ylabel), np.mean(pdiffa))
+    print("Newtonian sigma {}".format(ylabel), np.mean(np.abs(pdiffa-1)/pdiffaerr))
+                         
+    print("Off axis mean   {}".format(ylabel), np.mean(np.concatenate((pdiffb, pdiffc))))
+    print("Off axis sigma  {}".format(ylabel), np.mean(np.abs(np.concatenate((pdiffb, pdiffc))-1)/np.concatenate((pdiffberr, pdiffcerr))))
     
     if legend:
         pdiffa, pdiffaerr = percentdifference(tseries1a, tseries1aerr, tseries2a, tseries2aerr)
@@ -148,7 +155,7 @@ def percentdiffsubplot(subplotnum, title, xlabel, ylabel, t,\
     if bottom is not None:
         plt.ylim(bottom = bottom)
 
-t, nupGHz, _, nupGHz_err, FpmJy, _, FpmJy_err = np.loadtxt("demos/apjad675bt3_ascii.txt", dtype = str, skiprows = 6).T
+t, nupGHz, _, nupGHz_err, FpmJy, _, FpmJy_err = np.loadtxt("apjad675bt3_ascii.txt", dtype = str, skiprows = 6).T
 
 t = np.float64(t); print("day:", t)
 nupGHz = np.float64(nupGHz); print("peak freq (GHz):", nupGHz)
@@ -163,11 +170,11 @@ nup10_err = nupGHz_err/10
 z = 0.0262
 p = 2.8 # ?
 
-N = 1000 # TODO change to large number
+N = 5000 # TODO change to large number
 
-equip_newtonian    = [Equipartition(np.random.normal(FpmJy[i], FpmJy_err[i], N), np.random.normal(nup10[i], nup10_err[i], N), tdays[i], z,    0, p = p, epse = 0.1, epsB =   0.2, fA = 1, fV = 0.36, fOmega = 4, newtonian = True, isoNewtonianNe = False, factorsFour = False) for i in range(len(t))]
-equip_offAxis_thin = [Equipartition(np.random.normal(FpmJy[i], FpmJy_err[i], N), np.random.normal(nup10[i], nup10_err[i], N), tdays[i], z, 1.05, p = p, epse = 0.1, epsB = 0.003, fA = 1, fV =    1, onAxis = False) for i in range(len(t))]
-equip_offAxis_wide = [Equipartition(np.random.normal(FpmJy[i], FpmJy_err[i], N), np.random.normal(nup10[i], nup10_err[i], N), tdays[i], z, 1.57, p = p, epse = 0.1, epsB = 0.005, fA = 1, fV =    1, onAxis = False) for i in range(len(t))]
+equip_newtonian    = [Equipartition(np.random.normal(FpmJy[i], FpmJy_err[i], N), np.random.normal(nup10[i], nup10_err[i], N), tdays[i], z,    0, p = p, epse = 0.1, epsB =   0.2, fA = 1, fV = 0.36, fOmega = 4, newtonian = True, isoNewtonianNe = False, factorsFour = False, energysum = True) for i in range(len(t))]
+equip_offAxis_thin = [Equipartition(np.random.normal(FpmJy[i], FpmJy_err[i], N), np.random.normal(nup10[i], nup10_err[i], N), tdays[i], z, 1.05, p = p, epse = 0.1, epsB = 0.003, fA = 1, fV =    1, onAxis = False, energysum = True) for i in range(len(t))]
+equip_offAxis_wide = [Equipartition(np.random.normal(FpmJy[i], FpmJy_err[i], N), np.random.normal(nup10[i], nup10_err[i], N), tdays[i], z, 1.57, p = p, epse = 0.1, epsB = 0.005, fA = 1, fV =    1, onAxis = False, energysum = True) for i in range(len(t))]
 
 print("cosmology:", equip_newtonian[0].cosmo)
 print("C:", equip_newtonian[0].C())
@@ -230,7 +237,7 @@ logEgeom1, logEgeom1merr, logEgeom1perr, _,\
 logBgeom1, logBgeom1merr, logBgeom1perr,\
 logNgeom1, logNgeom1merr, logNgeom1perr,\
 logngeom1, logngeom1merr, logngeom1perr,\
-betageom1, betageom1merr, betageom1perr = np.loadtxt("demos/apjad675bt4_ChatGPTprocessed_geom1.txt", dtype = str).T
+betageom1, betageom1merr, betageom1perr = np.loadtxt("apjad675bt4_ChatGPTprocessed_geom1.txt", dtype = str).T
 
 logRgeom1    = np.float64(logRgeom1)
 logRgeom1err = np.maximum(np.abs(np.float64(logRgeom1merr)), np.float64(logRgeom1perr))
@@ -251,7 +258,7 @@ logEgeom2, logEgeom2merr, logEgeom2perr, _, _, _,\
 logBgeom2, logBgeom2merr, logBgeom2perr,\
 logNgeom2, logNgeom2merr, logNgeom2perr,\
 logngeom2, logngeom2merr, logngeom2perr,\
-Gammgeom2, Gammgeom2merr, Gammgeom2perr = np.loadtxt("demos/apjad675bt4_ChatGPTprocessed_geom2.txt", dtype = str).T
+Gammgeom2, Gammgeom2merr, Gammgeom2perr = np.loadtxt("apjad675bt4_ChatGPTprocessed_geom2.txt", dtype = str).T
 
 logRgeom2    = np.float64(logRgeom2)
 logRgeom2err = np.maximum(np.abs(np.float64(logRgeom2merr)), np.float64(logRgeom2perr))
@@ -272,7 +279,7 @@ logEgeom3, logEgeom3merr, logEgeom3perr, _, _, _,\
 logBgeom3, logBgeom3merr, logBgeom3perr,\
 logNgeom3, logNgeom3merr, logNgeom3perr,\
 logngeom3, logngeom3merr, logngeom3perr,\
-Gammgeom3, Gammgeom3merr, Gammgeom3perr = np.loadtxt("demos/apjad675bt4_ChatGPTprocessed_geom3.txt", dtype = str).T
+Gammgeom3, Gammgeom3merr, Gammgeom3perr = np.loadtxt("apjad675bt4_ChatGPTprocessed_geom3.txt", dtype = str).T
 
 logRgeom3    = np.float64(logRgeom3)
 logRgeom3err = np.maximum(np.abs(np.float64(logRgeom3merr)), np.float64(logRgeom3perr))
@@ -291,42 +298,42 @@ fig = plt.figure(figsize = (6, 6))
 
 def plotfigure():
     """"""
-    percentdiffsubplot(321, "", "", "$R_{ours}/R_{C24}$", tdays,\
+    percentdiffsubplot(321, "", "", r"$R_{\rm{eq,ours}}/R_{\rm{eq,BNP13}}$", tdays,\
                        np.array([np.mean(equip_newtonian[i].Req()) for i in range(len(tdays))]), np.array([np.std(equip_newtonian[i].Req(), ddof = 1) for i in range(len(tdays))]),\
                        np.array([np.mean(equip_offAxis_thin[i].Req()) for i in range(len(tdays))]), np.array([np.std(equip_offAxis_thin[i].Req(), ddof = 1) for i in range(len(tdays))]),\
                        np.array([np.mean(equip_offAxis_wide[i].Req()) for i in range(len(tdays))]), np.array([np.std(equip_offAxis_wide[i].Req(), ddof = 1) for i in range(len(tdays))]),\
                        10**logRgeom1, np.log(10) * 10**logRgeom1 * logRgeom1err,\
                        10**logRgeom2, np.log(10) * 10**logRgeom2 * logRgeom2err,\
                        10**logRgeom3, np.log(10) * 10**logRgeom3 * logRgeom3err, legend = True, labels = ["Newtonian", r"off axis $\theta=1.05$", r"off axis $\theta=1.57$"], size = 8, loc = "lower right")
-    percentdiffsubplot(322, "", "", "$E_{ours}/E_{C24}$", tdays,\
+    percentdiffsubplot(322, "", "", r"$E_{\rm{eq,ours}}/E_{\rm{eq,BNP13}}$", tdays,\
                        np.array([np.mean(equip_newtonian[i].energyeq()) for i in range(len(tdays))]), np.array([np.std(equip_newtonian[i].energyeq(), ddof = 1) for i in range(len(tdays))]),\
                        np.array([np.mean(equip_offAxis_thin[i].energyeq()) for i in range(len(tdays))]), np.array([np.std(equip_offAxis_thin[i].energyeq(), ddof = 1) for i in range(len(tdays))]),\
                        np.array([np.mean(equip_offAxis_wide[i].energyeq()) for i in range(len(tdays))]), np.array([np.std(equip_offAxis_wide[i].energyeq(), ddof = 1) for i in range(len(tdays))]),\
                        10**logEgeom1, np.log(10) * 10**logEgeom1 * logEgeom1err,\
                        10**logEgeom2, np.log(10) * 10**logEgeom2 * logEgeom2err,\
                        10**logEgeom3, np.log(10) * 10**logEgeom3 * logEgeom3err, flipy = True)
-    percentdiffsubplot(323, "", "", "$B_{ours}/B_{C24}$", tdays,\
+    percentdiffsubplot(323, "", "", r"$B_{\rm{ours}}/B_{\rm{BNP13}}$", tdays,\
                        np.array([np.mean(equip_newtonian[i].magField()) for i in range(len(tdays))]), np.array([np.std(equip_newtonian[i].magField(), ddof = 1) for i in range(len(tdays))]),\
                        np.array([np.mean(equip_offAxis_thin[i].magField()) for i in range(len(tdays))]), np.array([np.std(equip_offAxis_thin[i].magField(), ddof = 1) for i in range(len(tdays))]),\
                        np.array([np.mean(equip_offAxis_wide[i].magField()) for i in range(len(tdays))]), np.array([np.std(equip_offAxis_wide[i].magField(), ddof = 1) for i in range(len(tdays))]),\
                        10**logBgeom1, np.log(10) * 10**logBgeom1 * logBgeom1err,\
                        10**logBgeom2, np.log(10) * 10**logBgeom2 * logBgeom2err,\
                        10**logBgeom3, np.log(10) * 10**logBgeom3 * logBgeom3err)
-    percentdiffsubplot(324, "", "", "$N_{e,ours}/N_{e,C24}$", tdays,\
+    percentdiffsubplot(324, "", "", r"$N_{\rm{e,ours}}/N_{\rm{e,BNP13}}$", tdays,\
                        np.array([np.mean(equip_newtonian[i].Ne()) for i in range(len(tdays))]), np.array([np.std(equip_newtonian[i].Ne(), ddof = 1) for i in range(len(tdays))]),\
                        np.array([np.mean(equip_offAxis_thin[i].Ne()) for i in range(len(tdays))]), np.array([np.std(equip_offAxis_thin[i].Ne(), ddof = 1) for i in range(len(tdays))]),\
                        np.array([np.mean(equip_offAxis_wide[i].Ne()) for i in range(len(tdays))]), np.array([np.std(equip_offAxis_wide[i].Ne(), ddof = 1) for i in range(len(tdays))]),\
                        10**logNgeom1, np.log(10) * 10**logNgeom1 * logNgeom1err,\
                        10**logNgeom2, np.log(10) * 10**logNgeom2 * logNgeom2err,\
                        10**logNgeom3, np.log(10) * 10**logNgeom3 * logNgeom3err, flipy = True)
-    percentdiffsubplot(325, "", r"Time $t$ [days]", "$n_{ext,ours}/n_{ext,C24}$", tdays,\
+    percentdiffsubplot(325, "", r"Time $t$ [days]", r"$n_{\rm{ext,ours}}/n_{\rm{ext,BNP13}}$", tdays,\
                        np.array([np.mean(equip_newtonian[i].CNMnumDens()) for i in range(len(tdays))]), np.array([np.std(equip_newtonian[i].CNMnumDens(), ddof = 1) for i in range(len(tdays))]),\
                        np.array([np.mean(equip_offAxis_thin[i].CNMnumDens()) for i in range(len(tdays))]), np.array([np.std(equip_offAxis_thin[i].CNMnumDens(), ddof = 1) for i in range(len(tdays))]),\
                        np.array([np.mean(equip_offAxis_wide[i].CNMnumDens()) for i in range(len(tdays))]), np.array([np.std(equip_offAxis_wide[i].CNMnumDens(), ddof = 1) for i in range(len(tdays))]),\
                        10**logngeom1, np.log(10) * 10**logngeom1 * logngeom1err,\
                        10**logngeom2, np.log(10) * 10**logngeom2 * logngeom2err,\
                        10**logngeom3, np.log(10) * 10**logngeom3 * logngeom3err)
-    #percentdiffsubplot(326, "", "", "$\Gamma_{ours}/\Gamma_{C24}$", tdays,\
+    #percentdiffsubplot(326, "", "", "$\Gamma_{\rm{ours}}/\Gamma_{C24}$", tdays,\
     #                   np.array([np.nan]), np.array([np.nan]),\
     #                   np.array([np.mean(equip_offAxis_thin[i].gammaBulk()) for i in range(len(tdays))]), np.array([np.std(equip_offAxis_thin[i].gammaBulk(), ddof = 1) for i in range(len(tdays))]),\
     #                   np.array([np.mean(equip_offAxis_wide[i].gammaBulk()) for i in range(len(tdays))]), np.array([np.std(equip_offAxis_wide[i].gammaBulk(), ddof = 1) for i in range(len(tdays))]),\
@@ -334,7 +341,7 @@ def plotfigure():
     #                   Gammgeom2, Gammgeom2err,\
     #                   Gammgeom3, Gammgeom3err,\
     #                   plota = False)
-    #percentdiffsubplot(327, "", "time (days)", r"$\beta_{ours}/\beta_{C24}$", tdays,\
+    #percentdiffsubplot(327, "", "time (days)", r"$\beta_{\rm{ours}}/\beta_{C24}$", tdays,\
     #                   np.array([np.mean(equip_newtonian[i].betaeqN()) for i in range(len(tdays))]), np.array([np.std(equip_newtonian[i].betaeqN(), ddof = 1) for i in range(len(tdays))]),\
     #                   np.array([np.nan]), np.array([np.nan]),\
     #                   np.array([np.nan]), np.array([np.nan]),\
@@ -398,16 +405,16 @@ def plotfigure():
     inner_ax1.yaxis.tick_right()
     inner_ax1.yaxis.set_label_position("right")
     inner_ax1.errorbar(tdays, pdiffa, yerr=pdiffaerr, marker="s", alpha=alpha, linestyle=":", mfc="None", color=colors[0])
-    inner_ax1.axhline(1, linestyle="-", color="gray")
-    inner_ax1.set_ylabel(r"$\beta_{ours}/\beta_{C24}$")
+    inner_ax1.axhline(1, linestyle="--", color="gray")
+    inner_ax1.set_ylabel(r"$\beta_{\rm{ours}}/\beta_{\rm{BNP13}}$")
     inner_ax1.set_xscale("log")
     
     inner_ax2.yaxis.tick_right()
     inner_ax2.yaxis.set_label_position("right")
     inner_ax2.errorbar(tdays*shiftfactor, pdiffb, yerr=pdiffberr, marker="d", alpha=alpha, linestyle="--", mfc="None", color=colors[1])
     inner_ax2.errorbar(tdays*shiftfactor**2, pdiffc, yerr=pdiffcerr, marker="o", alpha=alpha, linestyle="-", mfc="None", color=colors[2])
-    inner_ax2.axhline(1, linestyle="-", color="gray")
-    inner_ax2.set_ylabel(r"$\Gamma_{ours}/\Gamma_{C24}$")
+    inner_ax2.axhline(1, linestyle="--", color="gray")
+    inner_ax2.set_ylabel(r"$\Gamma_{\rm{ours}}/\Gamma_{\rm{BNP13}}$")
     inner_ax2.set_xlabel(r"Time $t$ [days]")
     inner_ax2.set_xscale("log")
     #inner_ax2.labelpad = 15
@@ -417,7 +424,7 @@ def plotfigure():
     inner_ax2.set_xlim(all_axes[4].get_xlim())
 
     # Force figure layout to remove extra padding
-    plt.subplots_adjust(left=0.12, right=0.98, top=0.965, bottom=0.065, hspace=0, wspace=0)
+    plt.subplots_adjust(left=0.115, right=0.98, top=0.972, bottom=0.065, hspace=0, wspace=0)
     
     plt.savefig("percentdiff.png", dpi=750)
     plt.savefig("percentdiff.svg")
