@@ -191,7 +191,7 @@ equip_newtonian    = [Equipartition(scipy.stats.truncnorm.rvs(0, np.inf, FpmJy[i
 print("cosmology:", equip_newtonian[0].cosmo)
 print("C:", equip_newtonian[0].C())
 print("gammae Newtonian:", [np.mean(equip.gammae()) for equip in equip_newtonian])
-print("gammaM Newtonian:", [np.mean(equip.gammaM()) for equip in equip_newtonian])
+print("gammaM Newtonian (min 2):", [np.mean(equip.gammaM(debug = True)) for equip in equip_newtonian])
 #print("gammae offAxis theta=1.05:", [np.mean(equip.gammae()) for equip in equip_offAxis_thin])
 #print("gammaM offAxis theta=1.05:", [np.mean(equip.gammaM()) for equip in equip_offAxis_thin])
 #print("gammae offAxis theta=1.57:", [np.mean(equip.gammae()) for equip in equip_offAxis_wide])
